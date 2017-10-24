@@ -10,10 +10,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
-import android.util.Log;
-import android.widget.Toast;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -31,32 +32,50 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
 
     private AddPhotoHelper mAddPhotoHelper;
 
+    private boolean mShowRemoveButton = false;
+
     public static GetPhotoBottomDialogFragment newInstance(
             @Nullable OnBottomSheetButtonClickListener bottomSheetButtonClickListener,
             @Nullable OnImageReadyListener imageReadyListener,
             int targetImageWidth,
-            int targetImageHeight) {
+            int targetImageHeight,
+            @NonNull String imageName,
+            boolean toShowRemoveButton) {
 
-        GetPhotoBottomDialogFragment addPhotoBottomDialogFragment
+        GetPhotoBottomDialogFragment getPhotoBottomDialogFragment
                 = new GetPhotoBottomDialogFragment();
 
-        addPhotoBottomDialogFragment.mButtonCLickListener = bottomSheetButtonClickListener;
-        addPhotoBottomDialogFragment.mImageReadyListener = imageReadyListener;
-        addPhotoBottomDialogFragment.mTargetImageWidth = targetImageWidth;
-        addPhotoBottomDialogFragment.mTargetImageHeight = targetImageHeight;
+        getPhotoBottomDialogFragment.mButtonCLickListener = bottomSheetButtonClickListener;
+        getPhotoBottomDialogFragment.mImageReadyListener = imageReadyListener;
+        getPhotoBottomDialogFragment.mTargetImageWidth = targetImageWidth;
+        getPhotoBottomDialogFragment.mTargetImageHeight = targetImageHeight;
+        getPhotoBottomDialogFragment.mShowRemoveButton = toShowRemoveButton;
 
-        addPhotoBottomDialogFragment.mAddPhotoHelper = new AddPhotoHelper(
-                addPhotoBottomDialogFragment,
-                "123");
+        getPhotoBottomDialogFragment.mAddPhotoHelper = new AddPhotoHelper(
+                getPhotoBottomDialogFragment,
+                imageName);
 
-        return addPhotoBottomDialogFragment;
+        return getPhotoBottomDialogFragment;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+
+        View view = super.onCreateView(inflater, container, savedInstanceState);
+
+        showRemovePhotoButton(mShowRemoveButton);
+
+        return view;
+
     }
 
     @Override
     protected void onAddPhotoBDFragmentButtonsClick(@AddPhotoBottomSheetButtons String button) {
         switch (button) {
             case AddPhotoBottomSheetButtons.USE_CAMERA:
-                Log.d("BUGS", "GetPhotoBottomDialogFragment Use Camera Button Clicked");
                 if (mButtonCLickListener != null) {
                     mButtonCLickListener
                             .onBottomSheetButtonClick(AddPhotoBottomSheetButtons.USE_CAMERA);
@@ -64,7 +83,6 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
                 mAddPhotoHelper.dispatchTakePictureIntent();
                 break;
             case AddPhotoBottomSheetButtons.FROM_GALLERY:
-                Log.d("BUGS", "GetPhotoBottomDialogFragment From Gallery Button Clicked");
                 if (mButtonCLickListener != null) {
                     mButtonCLickListener
                             .onBottomSheetButtonClick(AddPhotoBottomSheetButtons.FROM_GALLERY);
@@ -72,10 +90,10 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
                 mAddPhotoHelper.dispatchPickPictureIntent();
                 break;
             case AddPhotoBottomSheetButtons.REMOVE_PHOTO:
-                Log.d("BUGS", "GetPhotoBottomDialogFragment Remove Photo Button Clicked");
                 if (mButtonCLickListener != null) {
                     mButtonCLickListener
                             .onBottomSheetButtonClick(AddPhotoBottomSheetButtons.REMOVE_PHOTO);
+                    dismiss();  // dismiss the bottom sheet dialog fragment
                 }
                 break;
         }
@@ -92,9 +110,9 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("BUGS", "GetPhotoBottomDialogFragment - onActivityResult");
         if (AddPhotoHelper.REQUEST_IMAGE_CAPTURE == requestCode &&
                 resultCode == Activity.RESULT_OK) {
+
             if (mAddPhotoHelper != null) {
                 Bitmap finalBitmap = mAddPhotoHelper
                         .getFinalBitmap(mAddPhotoHelper.getPhotoPath(),
@@ -104,8 +122,10 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
                     mImageReadyListener.onImageReadyWithBitmap(finalBitmap);
                 }
             }
+
         } else if (AddPhotoHelper.PICK_IMAGE == requestCode &&
                 resultCode == Activity.RESULT_OK) {
+
             if (mAddPhotoHelper != null) {
 
                 Uri selectedImage = data.getData();
@@ -129,6 +149,16 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
                     }
                 }
             }
+
         }
+        // close the bottom sheet dialog fragment,
+        dismiss();
+    }
+
+    // Facility to hide the remove photo option when photo is not there
+    private void showRemovePhotoButton(boolean flag) {
+        mShowRemoveButton = flag;
+        mTvBtnRemovePhoto.setVisibility(flag? View.VISIBLE: View.GONE);
+        mViewSeparator.setVisibility(flag? View.VISIBLE: View.GONE);
     }
 }

@@ -25,6 +25,8 @@ public class AddPhotoHelper {
 
     public static final int REQUEST_IMAGE_CAPTURE = 1;
 
+    public static final int PICK_IMAGE = 2;
+
     private Context mContext;
 
     private String mUserId;
@@ -43,7 +45,7 @@ public class AddPhotoHelper {
         mUserId = userId;
     }
 
-    public @Nullable String dispatchTakePictureIntent() {
+    @Nullable String dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(mParentDialogFragment.getActivity().getPackageManager()) != null) {
@@ -68,6 +70,18 @@ public class AddPhotoHelper {
             }
         }
         return null;
+    }
+
+    void dispatchPickPictureIntent() {
+
+        Intent pickIntent = new Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        pickIntent.setType("image/*");
+
+        Intent chooserIntent = Intent.createChooser(pickIntent, "Select Image");
+        //chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] {pickIntent});
+
+        mParentDialogFragment.startActivityForResult(chooserIntent, PICK_IMAGE);
     }
 
     public String getPhotoPath() {
@@ -108,6 +122,14 @@ public class AddPhotoHelper {
         bmOptions.inPurgeable = true;
 
         return BitmapFactory.decodeFile(photoPath, bmOptions);
+    }
+
+    public Bitmap getFinalBitmap(Bitmap original,
+                                 int width,
+                                 int height) {
+
+        return Bitmap.createScaledBitmap(original, width, height, false);
+
     }
 
 }

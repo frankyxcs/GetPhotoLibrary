@@ -4,11 +4,19 @@ package com.example.getphotolibrary.addphoto;
  * Created by 849501 on 10/20/2017.
  */
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 
 public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
@@ -37,7 +45,7 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
         addPhotoBottomDialogFragment.mTargetImageWidth = targetImageWidth;
         addPhotoBottomDialogFragment.mTargetImageHeight = targetImageHeight;
 
-        addPhotoBottomDialogFragment.mAddPhotoHelper =  new AddPhotoHelper(
+        addPhotoBottomDialogFragment.mAddPhotoHelper = new AddPhotoHelper(
                 addPhotoBottomDialogFragment,
                 "123");
 
@@ -48,7 +56,7 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
     protected void onAddPhotoBDFragmentButtonsClick(@AddPhotoBottomSheetButtons String button) {
         switch (button) {
             case AddPhotoBottomSheetButtons.USE_CAMERA:
-                Log.d("BUGS","GetPhotoBottomDialogFragment Use Camera Button Clicked");
+                Log.d("BUGS", "GetPhotoBottomDialogFragment Use Camera Button Clicked");
                 if (mButtonCLickListener != null) {
                     mButtonCLickListener
                             .onBottomSheetButtonClick(AddPhotoBottomSheetButtons.USE_CAMERA);
@@ -61,7 +69,7 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
                     mButtonCLickListener
                             .onBottomSheetButtonClick(AddPhotoBottomSheetButtons.FROM_GALLERY);
                 }
-                Toast.makeText(getContext(), "Temp Message", Toast.LENGTH_SHORT).show();
+                mAddPhotoHelper.dispatchPickPictureIntent();
                 break;
             case AddPhotoBottomSheetButtons.REMOVE_PHOTO:
                 Log.d("BUGS", "GetPhotoBottomDialogFragment Remove Photo Button Clicked");
@@ -85,13 +93,41 @@ public class GetPhotoBottomDialogFragment extends AddPhotoBottomDialogFragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("BUGS", "GetPhotoBottomDialogFragment - onActivityResult");
-        if (mAddPhotoHelper != null) {
-            Bitmap finalBitmap = mAddPhotoHelper
-                    .getFinalBitmap(mAddPhotoHelper.getPhotoPath(),
-                            mTargetImageWidth,
-                            mTargetImageHeight);
-            if (mImageReadyListener != null) {
-                mImageReadyListener.onImageReadyWithBitmap(finalBitmap);
+        if (AddPhotoHelper.REQUEST_IMAGE_CAPTURE == requestCode &&
+                resultCode == Activity.RESULT_OK) {
+            if (mAddPhotoHelper != null) {
+                Bitmap finalBitmap = mAddPhotoHelper
+                        .getFinalBitmap(mAddPhotoHelper.getPhotoPath(),
+                                mTargetImageWidth,
+                                mTargetImageHeight);
+                if (mImageReadyListener != null) {
+                    mImageReadyListener.onImageReadyWithBitmap(finalBitmap);
+                }
+            }
+        } else if (AddPhotoHelper.PICK_IMAGE == requestCode &&
+                resultCode == Activity.RESULT_OK) {
+            if (mAddPhotoHelper != null) {
+
+                Uri selectedImage = data.getData();
+
+                if (selectedImage != null) {
+                    InputStream imageStream = null;
+                    try {
+                        imageStream = getContext().getContentResolver().openInputStream(selectedImage);
+                        Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+                        Bitmap finalBitmap = mAddPhotoHelper
+                                .getFinalBitmap(yourSelectedImage,
+                                        mTargetImageWidth,
+                                        mTargetImageHeight);
+
+                        if (mImageReadyListener != null) {
+                            mImageReadyListener.onImageReadyWithBitmap(finalBitmap);
+                        }
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }

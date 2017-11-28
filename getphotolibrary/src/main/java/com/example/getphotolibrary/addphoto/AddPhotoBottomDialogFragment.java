@@ -17,6 +17,10 @@ import com.reusable.getphotolibrary.R;
 
 public abstract class AddPhotoBottomDialogFragment extends BottomSheetDialogFragment implements View.OnClickListener {
 
+    protected TextView mTvBtnRemovePhoto;
+
+    protected View mViewSeparator;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater,
@@ -29,11 +33,12 @@ public abstract class AddPhotoBottomDialogFragment extends BottomSheetDialogFrag
         // get the views and attach the listener
         TextView tvBtnUseCamera = view.findViewById(R.id.tv_btn_add_photo_camera);
         TextView tvBtnFromGallery = view.findViewById(R.id.tv_btn_add_photo_gallery);
-        TextView tvBtnRemovePhoto = view.findViewById(R.id.tv_btn_remove_photo);
+        mTvBtnRemovePhoto = view.findViewById(R.id.tv_btn_remove_photo);
+        mViewSeparator = view.findViewById(R.id.view_separator);
 
         tvBtnUseCamera.setOnClickListener(this);
         tvBtnFromGallery.setOnClickListener(this);
-        tvBtnRemovePhoto.setOnClickListener(this);
+        mTvBtnRemovePhoto.setOnClickListener(this);
 
         return view;
 
@@ -44,13 +49,10 @@ public abstract class AddPhotoBottomDialogFragment extends BottomSheetDialogFrag
         int clickedViewId = v.getId();
         if (clickedViewId == R.id.tv_btn_add_photo_camera) {
             onAddPhotoBDFragmentButtonsClick(AddPhotoBottomSheetButtons.USE_CAMERA);
-
         } else if (clickedViewId == R.id.tv_btn_add_photo_gallery) {
             onAddPhotoBDFragmentButtonsClick(AddPhotoBottomSheetButtons.FROM_GALLERY);
-
         } else if (clickedViewId == R.id.tv_btn_remove_photo) {
             onAddPhotoBDFragmentButtonsClick(AddPhotoBottomSheetButtons.REMOVE_PHOTO);
-
         }
     }
 
